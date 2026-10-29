@@ -15,6 +15,8 @@ $helloController = new ExampleController(greeting: "Hello", db: $mysql);
 
 $router->addRoute("GET", "/hello", $helloController->sayHello(...));
 $router->addRoute("GET", "/budapest", $helloController->getBudapestMaxTempCount(...));
+$router->addRoute("GET", "/city-weather", $helloController->getCityWeather(...));
+$router->addRoute("GET", "/region-weather", $helloController->getRegionWeather(...));
 // TODO: többi végpont
 
 $router->handleRequest();
