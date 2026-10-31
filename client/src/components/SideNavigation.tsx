@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { NavigationComponentProps } from "./types/navigation";
 import { NavigationListItem } from "./NavigationListItem";
+import { Settings } from "./Settings";
 
 export function SideNavigation({
   navigationList,
@@ -31,6 +32,9 @@ export function SideNavigation({
             />
           ))}
         </nav>
+      </div>
+      <div className="mt-auto border-t border-white/10 px-5 py-4">
+        <Settings />
       </div>
     </aside>
   );
