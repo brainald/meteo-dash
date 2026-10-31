@@ -1,20 +1,39 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import Navbar from "../components/Navbar";
+import { SideNavigation } from "../components/SideNavigation";
+import { Header } from "../components/Header";
+import { TopNavigation } from "../components/TopNavigation";
+import type { NavigationType } from "../components/types/navigation";
 
 export const Route = createRootRoute({
-  component: RootLayout,
+  component: DashboardLayout,
 });
 
-function RootLayout() {
+function DashboardLayout() {
+  const navigationList: NavigationType[] = [
+    { label: "Overview", to: "/", icon: "dashboard" },
+    {
+      label: "City weather",
+      to: "/city-weather",
+      icon: "city",
+    },
+    {
+      label: "Region weather",
+      to: "/region-weather",
+      icon: "region",
+    },
+  ];
+
   return (
-    <>
-      <header className="mb-8">
-        <Navbar />
-        <h1 className="px-6 py-4 text-3xl font-bold">MeteoDash</h1>
-      </header>
-      <main className="px-6">
-        <Outlet />
-      </main>
-    </>
+    <div className="min-h-screen bg-slate-50">
+      <SideNavigation navigationList={navigationList} />
+
+      <div className="lg:pl-64">
+        <Header />
+        <TopNavigation navigationList={navigationList} />
+        <main className="mx-auto max-w-7xl px-4 py-7 sm:px-8 sm:py-9">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }
