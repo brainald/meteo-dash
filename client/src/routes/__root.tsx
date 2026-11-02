@@ -3,9 +3,11 @@ import { SideNavigation } from "../components/SideNavigation";
 import { Header } from "../components/Header";
 import { TopNavigation } from "../components/TopNavigation";
 import type { NavigationType } from "../components/types/navigation";
+import { ErrorPage } from "../components/ErrorPage";
 
 export const Route = createRootRoute({
   component: DashboardLayout,
+  errorComponent: ({ reset }) => <ErrorPage reset={reset} />,
 });
 
 function DashboardLayout() {
