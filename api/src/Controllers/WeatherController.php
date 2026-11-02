@@ -123,6 +123,28 @@ class WeatherController
         return new JsonHttpResponse($rows);
     }
 
+    public function getCityOptions(): HttpResponseInterface
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT id, name, region
+            FROM weather.cities
+            ORDER BY name, region",
+        );
+
+        return new JsonHttpResponse($rows);
+    }
+
+    public function getRegionOptions(): HttpResponseInterface
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT DISTINCT region
+            FROM weather.cities
+            ORDER BY region",
+        );
+
+        return new JsonHttpResponse(array_column($rows, "region"));
+    }
+
     public function getMonitoredCities(): HttpResponseInterface
     {
         $rows = $this->db->queryAssoc(

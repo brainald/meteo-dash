@@ -16,6 +16,8 @@ $weatherController = new WeatherController(db: $mysql);
 $router->addRoute("GET", "/highlights/monitored-cities", $weatherController->getMonitoredCities(...));
 $router->addRoute("GET", "/highlights/covered-regions", $weatherController->getCoveredRegions(...));
 $router->addRoute("GET", "/highlights/highest-temperature", $weatherController->getHighestTemperature(...));
+$router->addRoute("GET", "/city-options", $weatherController->getCityOptions(...));
+$router->addRoute("GET", "/region-options", $weatherController->getRegionOptions(...));
 $router->addRoute("GET", "/city-weather", $weatherController->getCityWeather(...));
 $router->addRoute("GET", "/region-weather", $weatherController->getRegionWeather(...));
 
