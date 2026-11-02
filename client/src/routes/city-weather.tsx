@@ -79,31 +79,33 @@ function CityWeather() {
     {
       header: "DATE",
       value: (row) => formatDate(row.date),
-      render: (row) => formatDate(row.date),
+      numericValue: (row) => Date.parse(`${row.date}T00:00:00Z`),
+      statisticType: "date",
     },
     {
       header: "MIN TEMP",
       value: (row) => formatTemperature(row.minTemp),
-      render: (row) => formatTemperature(row.minTemp),
+      numericValue: (row) => row.minTemp,
+      statisticType: "temperature",
     },
     {
       header: "MAX TEMP",
       value: (row) => formatTemperature(row.maxTemp),
-      render: (row) => formatTemperature(row.maxTemp),
+      numericValue: (row) => row.maxTemp,
+      statisticType: "temperature",
     },
     {
       header: "AVG TEMP",
       value: (row) => formatTemperature(row.averageTemp),
-      render: (row) => (
-        <span className="font-semibold text-slate-800">
-          {formatTemperature(row.averageTemp)}
-        </span>
-      ),
+      className: "font-semibold text-slate-800",
+      numericValue: (row) => row.averageTemp,
+      statisticType: "temperature",
     },
     {
       header: `PRECIPITATION (${precipitationUnit === "millimeters" ? "MM" : "IN"})`,
       value: (row) => formatPrecipitation(row.precipitation),
-      render: (row) => formatPrecipitation(row.precipitation),
+      numericValue: (row) => row.precipitation,
+      statisticType: "precipitation",
     },
   ];
 

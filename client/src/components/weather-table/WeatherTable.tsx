@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from "react";
-import { RadixIcon } from "../RadixIcon";
 import { exportCsv } from "../../utils/exportCsv";
 import { WeatherTableError } from "./WeatherTableError";
+import { WeatherTableButton } from "./WeatherTableButton";
+import { WeatherTableFooter } from "./WeatherTableFooter";
 import { WeatherTableRows } from "./WeatherTableRows";
 import { WeatherTableSkeleton } from "./WeatherTableSkeleton";
 import type { WeatherColumn } from "./types";
@@ -88,15 +89,14 @@ export function WeatherTable<T>({
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
           <p className="mt-1 text-xs text-slate-500">{message}</p>
         </div>
-        <button
-          type="button"
+        <WeatherTableButton
+          variant="export"
+          icon="download"
           onClick={handleExportCsv}
           disabled={isExportDisabled}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <RadixIcon name="download" className="size-4" />
           Export CSV
-        </button>
+        </WeatherTableButton>
       </div>
 
       <div className="overflow-x-auto">
@@ -117,6 +117,12 @@ export function WeatherTable<T>({
           <tbody className="divide-y divide-slate-100">
             {tableBodyContent}
           </tbody>
+          <WeatherTableFooter
+            columns={columns}
+            rows={rows}
+            isLoading={isLoading}
+            isError={isError}
+          />
         </table>
       </div>
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-xs text-slate-500 sm:px-6">
@@ -142,22 +148,20 @@ export function WeatherTable<T>({
           <span>
             {firstRow}–{lastRow} of {totalCount} · Page {page} of {pageCount}
           </span>
-          <button
-            type="button"
+          <WeatherTableButton
+            variant="pagination"
             onClick={() => onPaginationChange(page - 1, limit)}
             disabled={isLoading || isError || page <= 1}
-            className="rounded-md border border-slate-200 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
-          </button>
-          <button
-            type="button"
+          </WeatherTableButton>
+          <WeatherTableButton
+            variant="pagination"
             onClick={() => onPaginationChange(page + 1, limit)}
             disabled={isLoading || isError || page >= pageCount}
-            className="rounded-md border border-slate-200 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
-          </button>
+          </WeatherTableButton>
         </div>
       </div>
     </section>

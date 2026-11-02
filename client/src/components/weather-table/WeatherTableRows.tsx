@@ -17,7 +17,7 @@ export function WeatherTableRow<T>({ row, columns }: WeatherTableRowProps<T>) {
             column.className,
           )}
         >
-          {column.render ? column.render(row) : column.value(row)}
+          {column.value(row)}
         </td>
       ))}
     </tr>
