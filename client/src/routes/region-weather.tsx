@@ -13,6 +13,7 @@ import {
   WeatherTable,
   type WeatherColumn,
 } from "../components/weather-table/WeatherTable";
+import { WeatherSummaryCard } from "../components/WeatherSummaryCard";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { RegionWeatherRecord } from "../types/regionWeather";
 import { formatDate } from "../utils/formatDate";
@@ -146,17 +147,17 @@ function RegionWeather() {
         rowsPerPage={10}
       />
       <section className="grid gap-3 sm:grid-cols-3">
-        <SummaryCard
+        <WeatherSummaryCard
           label="WARMEST DAY"
           name={warmestDay ? formatDate(warmestDay.date) : "—"}
           value={warmestDay ? formatTemperature(warmestDay.maxTemp) : "No data"}
         />
-        <SummaryCard
+        <WeatherSummaryCard
           label="COOLEST DAY"
           name={coldestDay ? formatDate(coldestDay.date) : "—"}
           value={coldestDay ? formatTemperature(coldestDay.minTemp) : "No data"}
         />
-        <SummaryCard
+        <WeatherSummaryCard
           label="WETTEST DAY"
           name={wettestDay ? formatDate(wettestDay.date) : "—"}
           value={
@@ -167,27 +168,5 @@ function RegionWeather() {
         />
       </section>
     </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  name,
-  value,
-}: {
-  label: string;
-  name: string;
-  value: string;
-}) {
-  return (
-    <article className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-      <p className="text-[9px] font-bold tracking-[0.13em] text-slate-500">
-        {label}
-      </p>
-      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-semibold text-slate-800">{name}</p>
-        <p className="text-xs text-slate-500">{value}</p>
-      </div>
-    </article>
   );
 }

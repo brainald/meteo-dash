@@ -14,6 +14,7 @@ import {
   WeatherTable,
   type WeatherColumn,
 } from "../components/weather-table/WeatherTable";
+import { WeatherSummaryCard } from "../components/WeatherSummaryCard";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { CityWeatherRecord } from "../types/cityWeather";
 import { formatDate } from "../utils/formatDate";
@@ -61,6 +62,23 @@ function CityWeather() {
     enabled: selectedCity !== undefined,
   });
   const rows = weatherQuery.data ?? [];
+  const warmestDay = rows.reduce<CityWeatherRecord | null>(
+    (current, row) =>
+      current === null || row.maxTemp > current.maxTemp ? row : current,
+    null,
+  );
+  const coldestDay = rows.reduce<CityWeatherRecord | null>(
+    (current, row) =>
+      current === null || row.minTemp < current.minTemp ? row : current,
+    null,
+  );
+  const wettestDay = rows.reduce<CityWeatherRecord | null>(
+    (current, row) =>
+      current === null || row.precipitation > current.precipitation
+        ? row
+        : current,
+    null,
+  );
 
   const columns: WeatherColumn<CityWeatherRecord>[] = [
     {
@@ -128,6 +146,27 @@ function CityWeather() {
         totalCount={rows.length}
         rowsPerPage={10}
       />
+      <section className="grid gap-3 sm:grid-cols-3">
+        <WeatherSummaryCard
+          label="WARMEST DAY"
+          name={warmestDay ? formatDate(warmestDay.date) : "—"}
+          value={warmestDay ? formatTemperature(warmestDay.maxTemp) : "No data"}
+        />
+        <WeatherSummaryCard
+          label="COOLEST DAY"
+          name={coldestDay ? formatDate(coldestDay.date) : "—"}
+          value={coldestDay ? formatTemperature(coldestDay.minTemp) : "No data"}
+        />
+        <WeatherSummaryCard
+          label="WETTEST DAY"
+          name={wettestDay ? formatDate(wettestDay.date) : "—"}
+          value={
+            wettestDay
+              ? formatPrecipitation(wettestDay.precipitation)
+              : "No data"
+          }
+        />
+      </section>
       <p className="text-xs text-slate-500">
         <RadixIcon
           name="info"
