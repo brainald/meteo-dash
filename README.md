@@ -85,6 +85,19 @@ $ curl localhost:8080/hello?name=vendég
 {"message":"Hello, vendég!"}
 ```
 
+Egy város időjárási adatai a `cityId`, `startDate` és `endDate` query
+paraméterekkel kérhetők le. A dátum formátuma `YYYY-MM-DD`:
+
+```sh
+$ curl "localhost:8080/city-weather?cityId=1&startDate=1901-01-01&endDate=1901-01-03"
+```
+
+A régió napi átlagos időjárási adatai hasonlóan kérhetők le:
+
+```sh
+$ curl "localhost:8080/region-weather?region=Dun%C3%A1nt%C3%BAl&startDate=1901-01-01&endDate=1901-01-03"
+```
+
 A `client-dev` containeré pedig ezzel:
 
 ```sh
@@ -141,6 +154,8 @@ szükségesnek ítéled.
 
 Kliensoldalon a UI létrehozásához használd a React könyvtárat, a TypeScript
 nyelvet és a Vite build rendszert. Hozz létre két felületet:
+Az alkalmazás ezeket a TanStack Router fájl alapú útvonalakon éri el:
+`/city-weather` és `/region-weather`.
 
 1. Egy várost, illetve egy kezdő- és végdátumot lehet rajta kiválasztani. Egy
    gomb megnyomására letölti a város adott időszakbeli időjárás adatait és
@@ -178,3 +193,6 @@ technológiák mélyebb ismeretét.
 1. Használd a PHP forráskód formázó és statikus elemző parancsokat (`composer
    format`, `composer analyse`). Javítsd ki az esetleges statikus elemző által
    jelzett hibákat!
+
+
+docker compose exec db mysql -uroot -proot

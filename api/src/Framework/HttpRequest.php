@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ADS\TakeHome\Framework;
 
 /**
- * HTTP kérés. 
+ * HTTP kérés.
  *
  * A keretrendszer egy ilyen objektumot ad át a végpont kezelő függvényeknek.
  */
@@ -17,7 +17,8 @@ class HttpRequest
     public function __construct(
         public readonly array $query,
         // a többit most hagyjuk
-    ) {}
+    ) {
+    }
 
     /**
      * Létrehoz egy új kérést globális PHP változókból.

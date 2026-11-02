@@ -13,7 +13,8 @@ class WeatherController
 {
     public function __construct(
         private readonly MySQL $db,
-    ) {}
+    ) {
+    }
 
     public function getCityWeather(HttpRequest $request): HttpResponseInterface
     {
@@ -122,7 +123,44 @@ class WeatherController
         return new JsonHttpResponse($rows);
     }
 
-    private function parseDate(string|array|null $date): int|null
+    public function getMonitoredCities(): HttpResponseInterface
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT COUNT(*) AS `count`
+            FROM weather.cities",
+        );
+
+        return new JsonHttpResponse(["count" => (int)$rows[0]["count"]]);
+    }
+
+    public function getCoveredRegions(): HttpResponseInterface
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT COUNT(DISTINCT region) AS `count`
+            FROM weather.cities",
+        );
+
+        return new JsonHttpResponse(["count" => (int)$rows[0]["count"]]);
+    }
+
+    public function getHighestTemperature(): HttpResponseInterface
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT
+                maximum_temperatures.max_temp AS `temperature`,
+                cities.name AS `city`,
+                DATE_FORMAT(STR_TO_DATE(maximum_temperatures.date, '%Y%m%d'), '%Y-%m-%d') AS `date`
+            FROM weather.maximum_temperatures
+            INNER JOIN weather.cities
+                ON cities.id = maximum_temperatures.city_id
+            ORDER BY maximum_temperatures.max_temp DESC, maximum_temperatures.date ASC, cities.id ASC
+            LIMIT 1",
+        );
+
+        return new JsonHttpResponse($rows[0] ?? null);
+    }
+
+    private function parseDate(mixed $date): int|null
     {
         if (!is_string($date) || preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) !== 1) {
             return null;
