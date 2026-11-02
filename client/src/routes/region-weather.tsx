@@ -13,7 +13,7 @@ import {
   WeatherTable,
   type WeatherColumn,
 } from "../components/weather-table/WeatherTable";
-import { WeatherSummaryCard } from "../components/WeatherSummaryCard";
+import { Summaries } from "../components/Summaries";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { RegionWeatherRecord } from "../types/regionWeather";
 import { formatDate } from "../utils/formatDate";
@@ -32,6 +32,8 @@ function RegionWeather() {
   const { formatTemperature, formatPrecipitation, precipitationUnit } =
     useWeatherUnits();
   const [filters, setFilters] = useState(initialFilters);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const offset = (pagination.page - 1) * pagination.limit;
   const regionOptionsQuery = useQuery({
     queryKey: ["region-options"],
     queryFn: fetchRegionOptions,
@@ -46,6 +48,9 @@ function RegionWeather() {
       selectedRegion,
       filters.startDate,
       filters.endDate,
+      pagination.page,
+      pagination.limit,
+      offset,
     ],
     queryFn: ({ signal }) => {
       if (!selectedRegion) {
@@ -56,29 +61,20 @@ function RegionWeather() {
         region: selectedRegion,
         startDate: filters.startDate,
         endDate: filters.endDate,
+        page: pagination.page,
+        limit: pagination.limit,
+        offset,
         signal,
       });
     },
     enabled: selectedRegion !== undefined,
   });
-  const rows = weatherQuery.data ?? [];
-  const warmestDay = rows.reduce<RegionWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.maxTemp > current.maxTemp ? row : current,
-    null,
-  );
-  const coldestDay = rows.reduce<RegionWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.minTemp < current.minTemp ? row : current,
-    null,
-  );
-  const wettestDay = rows.reduce<RegionWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.precipitation > current.precipitation
-        ? row
-        : current,
-    null,
-  );
+  const rows = weatherQuery.data?.data ?? [];
+  const summary = weatherQuery.data?.summary;
+  const handleApplyFilters = (nextFilters: WeatherFilters) => {
+    setFilters(nextFilters);
+    setPagination((current) => ({ ...current, page: 1 }));
+  };
 
   const columns: WeatherColumn<RegionWeatherRecord>[] = [
     {
@@ -127,7 +123,7 @@ function RegionWeather() {
           label: region,
         }))}
         initialFilters={initialFilters}
-        onApply={setFilters}
+        onApply={handleApplyFilters}
         isLoading={regionOptionsQuery.isLoading || weatherQuery.isFetching}
       />
       {regionOptionsQuery.isError && (
@@ -143,30 +139,13 @@ function RegionWeather() {
         rows={rows}
         columns={columns}
         rowKey={(row) => row.date}
-        totalCount={rows.length}
-        rowsPerPage={10}
+        totalCount={weatherQuery.data?.total ?? 0}
+        page={pagination.page}
+        limit={pagination.limit}
+        offset={weatherQuery.data?.offset ?? offset}
+        onPaginationChange={(page, limit) => setPagination({ page, limit })}
       />
-      <section className="grid gap-3 sm:grid-cols-3">
-        <WeatherSummaryCard
-          label="WARMEST DAY"
-          name={warmestDay ? formatDate(warmestDay.date) : "—"}
-          value={warmestDay ? formatTemperature(warmestDay.maxTemp) : "No data"}
-        />
-        <WeatherSummaryCard
-          label="COOLEST DAY"
-          name={coldestDay ? formatDate(coldestDay.date) : "—"}
-          value={coldestDay ? formatTemperature(coldestDay.minTemp) : "No data"}
-        />
-        <WeatherSummaryCard
-          label="WETTEST DAY"
-          name={wettestDay ? formatDate(wettestDay.date) : "—"}
-          value={
-            wettestDay
-              ? formatPrecipitation(wettestDay.precipitation)
-              : "No data"
-          }
-        />
-      </section>
+      <Summaries summary={summary} />
     </div>
   );
 }

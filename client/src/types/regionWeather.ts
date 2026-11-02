@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { paginationSchema } from "./pagination";
+import { weatherSummarySchema } from "./weatherSummary";
 
 export const regionWeatherRecordSchema = z.object({
   date: z.iso.date(),
@@ -8,6 +10,10 @@ export const regionWeatherRecordSchema = z.object({
   precipitation: z.number(),
 });
 
-export const regionWeatherSchema = z.array(regionWeatherRecordSchema);
+export const regionWeatherSchema = paginationSchema.extend({
+  data: z.array(regionWeatherRecordSchema),
+  summary: weatherSummarySchema,
+});
 
 export type RegionWeatherRecord = z.infer<typeof regionWeatherRecordSchema>;
+export type RegionWeatherResponse = z.infer<typeof regionWeatherSchema>;

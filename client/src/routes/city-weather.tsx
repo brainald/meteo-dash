@@ -5,7 +5,6 @@ import { fetchCityWeather } from "../api/cityWeather";
 import { fetchCityOptions } from "../api/locationOptions";
 import { PageDescription } from "../components/PageDescription";
 import { PageTitle } from "../components/PageTitle";
-import { RadixIcon } from "../components/RadixIcon";
 import {
   WeatherFilterForm,
   type WeatherFilters,
@@ -14,7 +13,7 @@ import {
   WeatherTable,
   type WeatherColumn,
 } from "../components/weather-table/WeatherTable";
-import { WeatherSummaryCard } from "../components/WeatherSummaryCard";
+import { Summaries } from "../components/Summaries";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { CityWeatherRecord } from "../types/cityWeather";
 import { formatDate } from "../utils/formatDate";
@@ -33,6 +32,8 @@ function CityWeather() {
   const { formatTemperature, formatPrecipitation, precipitationUnit } =
     useWeatherUnits();
   const [filters, setFilters] = useState(initialFilters);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+  const offset = (pagination.page - 1) * pagination.limit;
   const cityOptionsQuery = useQuery({
     queryKey: ["city-options"],
     queryFn: fetchCityOptions,
@@ -46,6 +47,9 @@ function CityWeather() {
       selectedCity?.id,
       filters.startDate,
       filters.endDate,
+      pagination.page,
+      pagination.limit,
+      offset,
     ],
     queryFn: ({ signal }) => {
       if (!selectedCity) {
@@ -56,29 +60,20 @@ function CityWeather() {
         cityId: selectedCity.id,
         startDate: filters.startDate,
         endDate: filters.endDate,
+        page: pagination.page,
+        limit: pagination.limit,
+        offset,
         signal,
       });
     },
     enabled: selectedCity !== undefined,
   });
-  const rows = weatherQuery.data ?? [];
-  const warmestDay = rows.reduce<CityWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.maxTemp > current.maxTemp ? row : current,
-    null,
-  );
-  const coldestDay = rows.reduce<CityWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.minTemp < current.minTemp ? row : current,
-    null,
-  );
-  const wettestDay = rows.reduce<CityWeatherRecord | null>(
-    (current, row) =>
-      current === null || row.precipitation > current.precipitation
-        ? row
-        : current,
-    null,
-  );
+  const rows = weatherQuery.data?.data ?? [];
+  const summary = weatherQuery.data?.summary;
+  const handleApplyFilters = (nextFilters: WeatherFilters) => {
+    setFilters(nextFilters);
+    setPagination((current) => ({ ...current, page: 1 }));
+  };
 
   const columns: WeatherColumn<CityWeatherRecord>[] = [
     {
@@ -127,7 +122,7 @@ function CityWeather() {
           label: `${city.name} (${city.region})`,
         }))}
         initialFilters={initialFilters}
-        onApply={setFilters}
+        onApply={handleApplyFilters}
         isLoading={cityOptionsQuery.isLoading || weatherQuery.isFetching}
       />
       {cityOptionsQuery.isError && (
@@ -143,38 +138,13 @@ function CityWeather() {
         rows={rows}
         columns={columns}
         rowKey={(row) => row.date}
-        totalCount={rows.length}
-        rowsPerPage={10}
+        totalCount={weatherQuery.data?.total ?? 0}
+        page={pagination.page}
+        limit={pagination.limit}
+        offset={weatherQuery.data?.offset ?? offset}
+        onPaginationChange={(page, limit) => setPagination({ page, limit })}
       />
-      <section className="grid gap-3 sm:grid-cols-3">
-        <WeatherSummaryCard
-          label="WARMEST DAY"
-          name={warmestDay ? formatDate(warmestDay.date) : "—"}
-          value={warmestDay ? formatTemperature(warmestDay.maxTemp) : "No data"}
-        />
-        <WeatherSummaryCard
-          label="COOLEST DAY"
-          name={coldestDay ? formatDate(coldestDay.date) : "—"}
-          value={coldestDay ? formatTemperature(coldestDay.minTemp) : "No data"}
-        />
-        <WeatherSummaryCard
-          label="WETTEST DAY"
-          name={wettestDay ? formatDate(wettestDay.date) : "—"}
-          value={
-            wettestDay
-              ? formatPrecipitation(wettestDay.precipitation)
-              : "No data"
-          }
-        />
-      </section>
-      <p className="text-xs text-slate-500">
-        <RadixIcon
-          name="info"
-          className="mr-2 inline-block size-4 text-sky-700"
-        />
-        Tip: Select a city and date range to narrow the results. Use the table
-        to compare daily minimum, maximum and average temperatures.
-      </p>
+      <Summaries summary={summary} />
     </div>
   );
 }

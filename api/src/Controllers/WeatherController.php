@@ -13,8 +13,7 @@ class WeatherController
 {
     public function __construct(
         private readonly MySQL $db,
-    ) {
-    }
+    ) {}
 
     public function getCityWeather(HttpRequest $request): HttpResponseInterface
     {
@@ -41,8 +40,12 @@ class WeatherController
             return new JsonHttpResponse(["error" => "'startDate' nem lehet későbbi, mint az 'endDate'"], 400);
         }
 
-        $rows = $this->db->queryAssoc(
-            "SELECT
+        $pagination = $this->parsePagination($request);
+        if ($pagination === null) {
+            return new JsonHttpResponse(["error" => "Érvénytelen lapozási paraméterek"], 400);
+        }
+
+        $baseQuery = "SELECT
                 DATE_FORMAT(STR_TO_DATE(maximum_temperatures.date, '%Y%m%d'), '%Y-%m-%d') AS `date`,
                 minimum_temperatures.min_temp AS `minTemp`,
                 maximum_temperatures.max_temp AS `maxTemp`,
@@ -56,16 +59,36 @@ class WeatherController
                 ON precipitation.city_id = maximum_temperatures.city_id
                 AND precipitation.date = maximum_temperatures.date
             WHERE maximum_temperatures.city_id = :cityId
-                AND maximum_temperatures.date BETWEEN :startDate AND :endDate
-            ORDER BY maximum_temperatures.date",
+                AND maximum_temperatures.date BETWEEN :startDate AND :endDate";
+        $queryParams = [
+            ":cityId" => (int)$cityId,
+            ":startDate" => $startDateValue,
+            ":endDate" => $endDateValue,
+        ];
+
+        $summaryRows = $this->getWeatherSummary($baseQuery, $queryParams);
+        $rows = $this->db->queryAssoc(
+            "SELECT *
+            FROM ({$baseQuery}) AS cityWeather
+            ORDER BY `date`
+            LIMIT :limit OFFSET :offset",
             [
-                ":cityId" => (int)$cityId,
-                ":startDate" => $startDateValue,
-                ":endDate" => $endDateValue,
+                ...$queryParams,
+                ":limit" => $pagination["limit"],
+                ":offset" => $pagination["offset"],
             ],
         );
 
-        return new JsonHttpResponse($rows);
+        return new JsonHttpResponse([
+            "data" => $rows,
+            ...$pagination,
+            "total" => $summaryRows["total"],
+            "summary" => [
+                "warmestDay" => $summaryRows["warmestDay"],
+                "coolestDay" => $summaryRows["coolestDay"],
+                "wettestDay" => $summaryRows["wettestDay"],
+            ],
+        ]);
     }
 
     public function getRegionWeather(HttpRequest $request): HttpResponseInterface
@@ -93,8 +116,12 @@ class WeatherController
             return new JsonHttpResponse(["error" => "'startDate' nem lehet későbbi, mint az 'endDate'"], 400);
         }
 
-        $rows = $this->db->queryAssoc(
-            "SELECT
+        $pagination = $this->parsePagination($request);
+        if ($pagination === null) {
+            return new JsonHttpResponse(["error" => "Érvénytelen lapozási paraméterek"], 400);
+        }
+
+        $baseQuery = "SELECT
                 DATE_FORMAT(STR_TO_DATE(maximum_temperatures.date, '%Y%m%d'), '%Y-%m-%d') AS `date`,
                 ROUND(AVG(minimum_temperatures.min_temp), 2) AS `minTemp`,
                 ROUND(AVG(maximum_temperatures.max_temp), 2) AS `maxTemp`,
@@ -112,15 +139,36 @@ class WeatherController
             WHERE cities.region = :region
                 AND maximum_temperatures.date BETWEEN :startDate AND :endDate
             GROUP BY maximum_temperatures.date
-            ORDER BY maximum_temperatures.date",
+            ";
+        $queryParams = [
+            ":region" => $region,
+            ":startDate" => $startDateValue,
+            ":endDate" => $endDateValue,
+        ];
+
+        $summaryRows = $this->getWeatherSummary($baseQuery, $queryParams);
+        $rows = $this->db->queryAssoc(
+            "SELECT *
+            FROM ({$baseQuery}) AS regionWeather
+            ORDER BY `date`
+            LIMIT :limit OFFSET :offset",
             [
-                ":region" => $region,
-                ":startDate" => $startDateValue,
-                ":endDate" => $endDateValue,
+                ...$queryParams,
+                ":limit" => $pagination["limit"],
+                ":offset" => $pagination["offset"],
             ],
         );
 
-        return new JsonHttpResponse($rows);
+        return new JsonHttpResponse([
+            "data" => $rows,
+            ...$pagination,
+            "total" => $summaryRows["total"],
+            "summary" => [
+                "warmestDay" => $summaryRows["warmestDay"],
+                "coolestDay" => $summaryRows["coolestDay"],
+                "wettestDay" => $summaryRows["wettestDay"],
+            ],
+        ]);
     }
 
     public function getCityOptions(): HttpResponseInterface
@@ -194,5 +242,83 @@ class WeatherController
         }
 
         return (int)$parsedDate->format("Ymd");
+    }
+
+    /**
+     * @return array{page: int, limit: int, offset: int}|null
+     */
+    private function parsePagination(HttpRequest $request): array|null
+    {
+        $page = $this->parseIntegerQuery($request->query["page"] ?? null, 1, 1, PHP_INT_MAX);
+        $limit = $this->parseIntegerQuery($request->query["limit"] ?? null, 10, 1, 100);
+        if ($page === null || $limit === null || ($page - 1) > intdiv(PHP_INT_MAX, $limit)) {
+            return null;
+        }
+
+        $calculatedOffset = ($page - 1) * $limit;
+        $offset = $this->parseIntegerQuery(
+            $request->query["offset"] ?? null,
+            $calculatedOffset,
+            0,
+            PHP_INT_MAX,
+        );
+        if ($offset === null || $offset !== $calculatedOffset) {
+            return null;
+        }
+
+        return [
+            "page" => $page,
+            "limit" => $limit,
+            "offset" => $offset,
+        ];
+    }
+
+    private function parseIntegerQuery(mixed $value, int $default, int $min, int $max): int|null
+    {
+        if ($value === null) {
+            return $default;
+        }
+        if (!is_string($value) || preg_match('/^\d+$/D', $value) !== 1) {
+            return null;
+        }
+
+        $integer = filter_var(
+            $value,
+            FILTER_VALIDATE_INT,
+            ["options" => ["min_range" => $min, "max_range" => $max]],
+        );
+
+        return is_int($integer) ? $integer : null;
+    }
+
+    private function getWeatherSummary(string $baseQuery, array $params): array
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT
+                COUNT(*) AS `total`,
+                MAX(`maxTemp`) AS `warmestValue`,
+                SUBSTRING_INDEX(GROUP_CONCAT(`date` ORDER BY `maxTemp` DESC, `date` ASC), ',', 1) AS `warmestDate`,
+                MIN(`minTemp`) AS `coolestValue`,
+                SUBSTRING_INDEX(GROUP_CONCAT(`date` ORDER BY `minTemp` ASC, `date` ASC), ',', 1) AS `coolestDate`,
+                MAX(`precipitation`) AS `wettestValue`,
+                SUBSTRING_INDEX(GROUP_CONCAT(`date` ORDER BY `precipitation` DESC, `date` ASC), ',', 1) AS `wettestDate`
+            FROM ({$baseQuery}) AS weatherSummary",
+            $params,
+        );
+
+        $row = $rows[0];
+
+        return [
+            "total" => (int)$row["total"],
+            "warmestDay" => $row["warmestDate"] === null
+                ? null
+                : ["date" => (string)$row["warmestDate"], "value" => (float)$row["warmestValue"]],
+            "coolestDay" => $row["coolestDate"] === null
+                ? null
+                : ["date" => (string)$row["coolestDate"], "value" => (float)$row["coolestValue"]],
+            "wettestDay" => $row["wettestDate"] === null
+                ? null
+                : ["date" => (string)$row["wettestDate"], "value" => (float)$row["wettestValue"]],
+        ];
     }
 }

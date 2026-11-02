@@ -15,7 +15,10 @@ type WeatherTableProps<T> = {
   columns: WeatherColumn<T>[];
   rowKey: (row: T) => string;
   totalCount: number;
-  rowsPerPage?: number;
+  page: number;
+  limit: number;
+  offset: number;
+  onPaginationChange: (page: number, limit: number) => void;
   isError?: boolean;
   isLoading?: boolean;
 };
@@ -27,7 +30,10 @@ export function WeatherTable<T>({
   columns,
   rowKey,
   totalCount,
-  rowsPerPage = 10,
+  page,
+  limit,
+  offset,
+  onPaginationChange,
   isError,
   isLoading,
 }: Readonly<WeatherTableProps<T>>) {
@@ -36,6 +42,9 @@ export function WeatherTable<T>({
   }, [columns, itemLabel, rows]);
 
   const isExportDisabled = isLoading || isError || rows.length === 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / limit));
+  const firstRow = rows.length > 0 ? offset + 1 : 0;
+  const lastRow = offset + rows.length;
 
   const message = useMemo(() => {
     if (isLoading) {
@@ -111,10 +120,45 @@ export function WeatherTable<T>({
         </table>
       </div>
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-xs text-slate-500 sm:px-6">
-        <span>Rows per page: {rowsPerPage}</span>
-        <span>
-          {rows.length === 0 ? 0 : 1}–{rows.length} of {totalCount}
-        </span>
+        <label className="flex items-center gap-2">
+          <span>Rows per page</span>
+          <select
+            aria-label="Rows per page"
+            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-slate-700"
+            value={limit}
+            onChange={(event) =>
+              onPaginationChange(1, Number(event.currentTarget.value))
+            }
+            disabled={isLoading || isError}
+          >
+            {[10, 25, 50, 100].map((pageLimit) => (
+              <option key={pageLimit} value={pageLimit}>
+                {pageLimit}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <span>
+            {firstRow}–{lastRow} of {totalCount} · Page {page} of {pageCount}
+          </span>
+          <button
+            type="button"
+            onClick={() => onPaginationChange(page - 1, limit)}
+            disabled={isLoading || isError || page <= 1}
+            className="rounded-md border border-slate-200 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => onPaginationChange(page + 1, limit)}
+            disabled={isLoading || isError || page >= pageCount}
+            className="rounded-md border border-slate-200 px-2.5 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </section>
   );
