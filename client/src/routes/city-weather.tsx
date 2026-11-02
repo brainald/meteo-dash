@@ -10,6 +10,7 @@ import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { CityWeatherRecord } from "../types/cityWeather";
 import { cityWeatherSearchSchema } from "../types/cityWeatherSearch";
 import { createWeatherColumns } from "../utils/weatherColumns";
+import { useCallback } from "react";
 
 export const Route = createFileRoute("/city-weather")({
   validateSearch: cityWeatherSearchSchema,
@@ -21,19 +22,24 @@ function CityWeather() {
   const navigate = Route.useNavigate();
   const { formatTemperature, formatPrecipitation, precipitationUnit } =
     useWeatherUnits();
+
   const filters: WeatherFilters = {
     selection: String(search.cityId),
     startDate: search.startDate,
     endDate: search.endDate,
   };
+
   const { page, limit, offset } = search;
+
   const cityOptionsQuery = useQuery({
     queryKey: ["city-options"],
     queryFn: fetchCityOptions,
   });
+
   const selectedCity = cityOptionsQuery.data?.find(
     (city) => String(city.id) === filters.selection,
   );
+
   const weatherQuery = useQuery({
     queryKey: [
       "city-weather",
@@ -61,30 +67,39 @@ function CityWeather() {
     },
     enabled: selectedCity !== undefined,
   });
+
   const rows = weatherQuery.data?.data ?? [];
   const summary = weatherQuery.data?.summary;
-  const handleApplyFilters = (nextFilters: WeatherFilters) => {
-    void navigate({
-      search: (previous) => ({
-        ...previous,
-        cityId: Number(nextFilters.selection),
-        startDate: nextFilters.startDate,
-        endDate: nextFilters.endDate,
-        page: 1,
-        offset: 0,
-      }),
-    });
-  };
-  const handlePaginationChange = (nextPage: number, nextLimit: number) => {
-    void navigate({
-      search: (previous) => ({
-        ...previous,
-        page: nextPage,
-        limit: nextLimit,
-        offset: (nextPage - 1) * nextLimit,
-      }),
-    });
-  };
+
+  const handleApplyFilters = useCallback(
+    (nextFilters: WeatherFilters) => {
+      void navigate({
+        search: (previous) => ({
+          ...previous,
+          cityId: Number(nextFilters.selection),
+          startDate: nextFilters.startDate,
+          endDate: nextFilters.endDate,
+          page: 1,
+          offset: 0,
+        }),
+      });
+    },
+    [navigate],
+  );
+
+  const handlePaginationChange = useCallback(
+    (nextPage: number, nextLimit: number) => {
+      void navigate({
+        search: (previous) => ({
+          ...previous,
+          page: nextPage,
+          limit: nextLimit,
+          offset: (nextPage - 1) * nextLimit,
+        }),
+      });
+    },
+    [navigate],
+  );
 
   const columns = createWeatherColumns<CityWeatherRecord>({
     formatTemperature,

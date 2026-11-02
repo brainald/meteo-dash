@@ -2,6 +2,7 @@
     "name": "ads/takehome-task",
     "type": "project",
     "scripts": {
+        "test": "phpunit",
         "analyse": "phpstan analyse -c phpstan.neon",
         "format": "php-cs-fixer fix"
     },

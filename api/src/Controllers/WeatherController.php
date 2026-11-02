@@ -13,7 +13,8 @@ class WeatherController
 {
     public function __construct(
         private readonly MySQL $db,
-    ) {}
+    ) {
+    }
 
     public function getCityWeather(HttpRequest $request): HttpResponseInterface
     {
@@ -291,6 +292,15 @@ class WeatherController
         return is_int($integer) ? $integer : null;
     }
 
+    /**
+     * @param array<string, scalar|null> $params
+     * @return array{
+     *     total: int,
+     *     warmestDay: array{date: string, value: float}|null,
+     *     coolestDay: array{date: string, value: float}|null,
+     *     wettestDay: array{date: string, value: float}|null
+     * }
+     */
     private function getWeatherSummary(string $baseQuery, array $params): array
     {
         $rows = $this->db->queryAssoc(

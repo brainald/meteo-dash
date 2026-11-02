@@ -10,6 +10,7 @@ import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { RegionWeatherRecord } from "../types/regionWeather";
 import { regionWeatherSearchSchema } from "../types/regionWeatherSearch";
 import { createWeatherColumns } from "../utils/weatherColumns";
+import { useCallback } from "react";
 
 export const Route = createFileRoute("/region-weather")({
   validateSearch: regionWeatherSearchSchema,
@@ -21,16 +22,20 @@ function RegionWeather() {
   const navigate = Route.useNavigate();
   const { formatTemperature, formatPrecipitation, precipitationUnit } =
     useWeatherUnits();
+
   const filters: WeatherFilters = {
     selection: search.region,
     startDate: search.startDate,
     endDate: search.endDate,
   };
+
   const { page, limit, offset } = search;
+
   const regionOptionsQuery = useQuery({
     queryKey: ["region-options"],
     queryFn: fetchRegionOptions,
   });
+
   const selectedRegion = regionOptionsQuery.data?.find(
     (region) => region === filters.selection,
   );
@@ -62,30 +67,39 @@ function RegionWeather() {
     },
     enabled: selectedRegion !== undefined,
   });
+
   const rows = weatherQuery.data?.data ?? [];
   const summary = weatherQuery.data?.summary;
-  const handleApplyFilters = (nextFilters: WeatherFilters) => {
-    void navigate({
-      search: (previous) => ({
-        ...previous,
-        region: nextFilters.selection,
-        startDate: nextFilters.startDate,
-        endDate: nextFilters.endDate,
-        page: 1,
-        offset: 0,
-      }),
-    });
-  };
-  const handlePaginationChange = (nextPage: number, nextLimit: number) => {
-    void navigate({
-      search: (previous) => ({
-        ...previous,
-        page: nextPage,
-        limit: nextLimit,
-        offset: (nextPage - 1) * nextLimit,
-      }),
-    });
-  };
+
+  const handleApplyFilters = useCallback(
+    (nextFilters: WeatherFilters) => {
+      void navigate({
+        search: (previous) => ({
+          ...previous,
+          region: nextFilters.selection,
+          startDate: nextFilters.startDate,
+          endDate: nextFilters.endDate,
+          page: 1,
+          offset: 0,
+        }),
+      });
+    },
+    [navigate],
+  );
+
+  const handlePaginationChange = useCallback(
+    (nextPage: number, nextLimit: number) => {
+      void navigate({
+        search: (previous) => ({
+          ...previous,
+          page: nextPage,
+          limit: nextLimit,
+          offset: (nextPage - 1) * nextLimit,
+        }),
+      });
+    },
+    [navigate],
+  );
 
   const columns = createWeatherColumns<RegionWeatherRecord>({
     formatTemperature,
