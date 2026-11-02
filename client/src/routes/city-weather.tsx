@@ -16,6 +16,7 @@ import {
 } from "../components/weather-table/WeatherTable";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { CityWeatherRecord } from "../types/cityWeather";
+import { formatDate } from "../utils/formatDate";
 
 const initialFilters: WeatherFilters = {
   selection: "1",
@@ -137,13 +138,4 @@ function CityWeather() {
       </p>
     </div>
   );
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${value}T00:00:00Z`));
 }
