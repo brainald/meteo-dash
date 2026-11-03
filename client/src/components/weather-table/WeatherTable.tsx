@@ -125,8 +125,8 @@ export function WeatherTable<T>({
           />
         </table>
       </div>
-      <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-xs text-slate-500 sm:px-6">
-        <label className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <label className="flex w-fit items-center gap-2">
           <span>Rows per page</span>
           <select
             aria-label="Rows per page"
@@ -144,24 +144,26 @@ export function WeatherTable<T>({
             ))}
           </select>
         </label>
-        <div className="flex flex-wrap items-center gap-3">
-          <span>
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3">
+          <span className="break-words sm:whitespace-nowrap">
             {firstRow}–{lastRow} of {totalCount} · Page {page} of {pageCount}
           </span>
-          <WeatherTableButton
-            variant="pagination"
-            onClick={() => onPaginationChange(page - 1, limit)}
-            disabled={isLoading || isError || page <= 1}
-          >
-            Previous
-          </WeatherTableButton>
-          <WeatherTableButton
-            variant="pagination"
-            onClick={() => onPaginationChange(page + 1, limit)}
-            disabled={isLoading || isError || page >= pageCount}
-          >
-            Next
-          </WeatherTableButton>
+          <div className="flex justify-end gap-2">
+            <WeatherTableButton
+              variant="pagination"
+              onClick={() => onPaginationChange(page - 1, limit)}
+              disabled={isLoading || isError || page <= 1}
+            >
+              Previous
+            </WeatherTableButton>
+            <WeatherTableButton
+              variant="pagination"
+              onClick={() => onPaginationChange(page + 1, limit)}
+              disabled={isLoading || isError || page >= pageCount}
+            >
+              Next
+            </WeatherTableButton>
+          </div>
         </div>
       </div>
     </section>

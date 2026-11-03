@@ -55,9 +55,9 @@ services:
       ads_takehome:
     ports:
       - 8300:8000
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     hostname: db
