@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useWeatherUnits } from "../../context/useWeatherUnits";
-import { formatDate } from "../../utils/formatDate";
 import type { WeatherColumn } from "./types";
 
 type WeatherTableFooterProps<T> = Readonly<{
@@ -10,6 +9,22 @@ type WeatherTableFooterProps<T> = Readonly<{
   isError?: boolean;
 }>;
 
+function FooterTableCell({
+  label,
+  data,
+}: Readonly<{ label?: string; data?: string }>) {
+  return (
+    <td className="whitespace-nowrap px-5 py-3 text-xs text-slate-700 sm:px-6">
+      {label ? (
+        <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">
+          {label}
+        </span>
+      ) : null}
+      {data ? <span className="font-semibold">{data}</span> : null}
+    </td>
+  );
+}
+
 export function WeatherTableFooter<T>({
   columns,
   rows,
@@ -18,13 +33,13 @@ export function WeatherTableFooter<T>({
 }: WeatherTableFooterProps<T>) {
   const { formatTemperature, formatPrecipitation } = useWeatherUnits();
 
-  const statistics = useMemo(
+  const statistics: { median: string; mode: string }[] = useMemo(
     () =>
       columns.map((column) => {
+        if (column.header === "DATE") return { median: "", mode: "" };
+
         const formatValue = (value: number) => {
           switch (column.statisticType) {
-            case "date":
-              return formatDate(new Date(value).toISOString().slice(0, 10));
             case "temperature":
               return formatTemperature(value);
             case "precipitation":
@@ -88,34 +103,30 @@ export function WeatherTableFooter<T>({
   return (
     <tfoot className="border-t-2 border-slate-200 bg-slate-50 text-left">
       <tr>
-        {statistics.map((statistic, index) => (
-          <td
-            key={columns[index].header}
-            className="whitespace-nowrap px-5 py-3 text-xs text-slate-700 sm:px-6"
-          >
-            <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">
-              Median (page)
-            </span>
-            <span className="font-semibold">
-              {isLoading || isError ? "—" : statistic.median}
-            </span>
-          </td>
-        ))}
+        {statistics.map((statistic, index) =>
+          columns[index].header === "DATE" ? (
+            <FooterTableCell key={columns[index].header} />
+          ) : (
+            <FooterTableCell
+              key={columns[index].header}
+              label="Median (page)"
+              data={isLoading || isError ? "—" : statistic.median}
+            />
+          ),
+        )}
       </tr>
       <tr>
-        {statistics.map((statistic, index) => (
-          <td
-            key={columns[index].header}
-            className="whitespace-nowrap px-5 py-3 text-xs text-slate-700 sm:px-6"
-          >
-            <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">
-              Mode (page)
-            </span>
-            <span className="font-semibold">
-              {isLoading || isError ? "—" : statistic.mode}
-            </span>
-          </td>
-        ))}
+        {statistics.map((statistic, index) =>
+          columns[index].header === "DATE" ? (
+            <FooterTableCell key={columns[index].header} />
+          ) : (
+            <FooterTableCell
+              key={columns[index].header}
+              label="Mode (page)"
+              data={isLoading || isError ? "—" : statistic.mode}
+            />
+          ),
+        )}
       </tr>
     </tfoot>
   );
