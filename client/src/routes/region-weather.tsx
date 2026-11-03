@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useCallback } from "react";
 import { fetchRegionWeather } from "../api/regionWeather";
 import { fetchRegionOptions } from "../api/locationOptions";
 import { WeatherResults } from "../components/WeatherResults";
@@ -8,9 +9,12 @@ import { PageTitle } from "../components/PageTitle";
 import type { WeatherFilters } from "../components/WeatherFilterForm";
 import { useWeatherUnits } from "../context/useWeatherUnits";
 import type { RegionWeatherRecord } from "../types/regionWeather";
-import { regionWeatherSearchSchema } from "../types/regionWeatherSearch";
+import {
+  regionWeatherSearchStorageKey,
+  regionWeatherSearchSchema,
+} from "../types/regionWeatherSearch";
 import { createWeatherColumns } from "../utils/weatherColumns";
-import { useCallback } from "react";
+import { saveWeatherSearch } from "../utils/sessionStorageManager";
 
 export const Route = createFileRoute("/region-weather")({
   validateSearch: regionWeatherSearchSchema,
@@ -20,6 +24,9 @@ export const Route = createFileRoute("/region-weather")({
 function RegionWeather() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  useEffect(() => {
+    saveWeatherSearch(regionWeatherSearchStorageKey, search);
+  }, [search]);
   const { formatTemperature, formatPrecipitation, precipitationUnit } =
     useWeatherUnits();
 

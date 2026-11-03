@@ -1,4 +1,22 @@
 import { z } from "zod";
+import { readWeatherSearch } from "../utils/sessionStorageManager";
+
+export const cityWeatherSearchStorageKey = "city-weather-search";
+const cityWeatherSearchValuesSchema = z.object({
+  cityId: z.coerce.number().int().positive(),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
+  page: z.coerce.number().int().positive(),
+  limit: z.coerce.number().int().min(1).max(100),
+  offset: z.coerce.number().int().nonnegative(),
+});
+
+function getSavedCityWeatherSearch() {
+  return readWeatherSearch(
+    cityWeatherSearchStorageKey,
+    cityWeatherSearchValuesSchema,
+  );
+}
 
 export const defaultCityWeatherSearch = {
   cityId: 1,
@@ -10,21 +28,35 @@ export const defaultCityWeatherSearch = {
 } as const;
 
 export const cityWeatherSearchSchema = z.object({
-  cityId: z.coerce.number().int().positive().default(defaultCityWeatherSearch.cityId),
-  startDate: z.iso.date().default(defaultCityWeatherSearch.startDate),
-  endDate: z.iso.date().default(defaultCityWeatherSearch.endDate),
-  page: z.coerce.number().int().positive().default(defaultCityWeatherSearch.page),
+  cityId: cityWeatherSearchValuesSchema.shape.cityId.default(
+    () =>
+      getSavedCityWeatherSearch()?.cityId ?? defaultCityWeatherSearch.cityId,
+  ),
+  startDate: cityWeatherSearchValuesSchema.shape.startDate.default(
+    () =>
+      getSavedCityWeatherSearch()?.startDate ??
+      defaultCityWeatherSearch.startDate,
+  ),
+  endDate: cityWeatherSearchValuesSchema.shape.endDate.default(
+    () =>
+      getSavedCityWeatherSearch()?.endDate ?? defaultCityWeatherSearch.endDate,
+  ),
+  page: cityWeatherSearchValuesSchema.shape.page.default(
+    () => getSavedCityWeatherSearch()?.page ?? defaultCityWeatherSearch.page,
+  ),
   limit: z.coerce
     .number()
     .int()
     .min(1)
     .max(100)
-    .default(defaultCityWeatherSearch.limit),
-  offset: z.coerce
-    .number()
-    .int()
-    .nonnegative()
-    .default(defaultCityWeatherSearch.offset),
+    .default(
+      () =>
+        getSavedCityWeatherSearch()?.limit ?? defaultCityWeatherSearch.limit,
+    ),
+  offset: cityWeatherSearchValuesSchema.shape.offset.default(
+    () =>
+      getSavedCityWeatherSearch()?.offset ?? defaultCityWeatherSearch.offset,
+  ),
 });
 
 export type CityWeatherSearch = z.infer<typeof cityWeatherSearchSchema>;
