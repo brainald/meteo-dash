@@ -1,75 +1,50 @@
-# Adiumsoft PHP / React gyakorlati feladat
+# Adiumsoft PHP / React Practical Assignment
 
-## Előkészületek
+## Preparation
 
-Legyenek feltelepítve az alábbi programok:
+Install the following software:
 
-- [Docker](https://docs.docker.com/get-started/get-docker/) és [Docker Compose](https://docs.docker.com/compose/install/)
-- `git` valamilyen formájában (pl. [Git bash](https://git-scm.com/downloads/win))
+- [Docker](https://docs.docker.com/get-started/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- `git` in any form (for example, [Git Bash](https://git-scm.com/downloads/win))
 
-A leírás további részében szereplő parancsok `bash`-hoz készültek, ebben fognak
-helyesen működni. Használható természetesen `cmd`, PowerShell vagy bármilyen
-egyéb shell is, de ebben az esetben valószínüleg a parancsok módosítására lesz
-szükség. 
+The commands in the rest of this guide are designed for `bash` and should work correctly in Bash. You can use `cmd`, PowerShell, or another shell, but you will probably need to adjust the commands accordingly.
 
-Ha még nem tetted meg, töltsd le magadhoz a repository-t:
-
-```sh
-git clone https://bitbucket.org/adiumsoftdev/takehome.git
-```
-
-Hozd létre a `.env` fájlt - ez tartalmazza a Docker containerek beállításait:
+Create the `.env` file, which contains the Docker container settings:
 
 ```sh
 cd takehome
 cp .env.example .env
 ```
 
-## Feladat
+## Assignment
 
-A feladat során meteorológiai adatokból kimutatást készítő fullstack alkalmazást
-kell elkészítened. A részfeladatok megoldási sorrendje tetszőleges. A
-végeredmény ellenőrzése a `prod` és `db` Docker containerek felépítésével,
-indításával, használatával, illetve a forráskód ellenőrzésével fog zajlani. A
-feladatot tehát akkor add át, mikor megbizonyosodtál róla, hogy az alábbi
-parancs lefut,
+During this assignment, you will build a full-stack application that generates reports from meteorological data. The subtasks can be completed in any order. The final result will be checked by building and starting the `prod` and `db` Docker containers and by reviewing the source code. Submit the assignment only after verifying that the following command runs successfully:
 
 ```sh
 docker compose up prod db
 ```
 
-az elkészült program elérhető a `http://localhost:8300` címen, és megfelelően
-működik. Csak az `api/` és `client/` mappák tartalmát, a `db-suggestions.md`
-fájlt, illetve szükség esetén a `docker-compose.yaml` fájl tartalmát módosítsd!
+The finished application will be available at `http://localhost:8300` and must work correctly. Modify only the contents of the `api/` and `client/` directories, the `db-suggestions.md` file, and, if necessary, the `docker-compose.yaml` file.
 
+### Development Environment, Docker
 
-### Fejlesztői környezet, Docker
-
-Készítsd elő a feladathoz szükséges adatokat! Az adatok a `migrations/`
-könyvtárban, a `data.zip` fájlban találhatóak. Csomagold ki ugyanebbe a mappába
-atartalmát. A `db` container indításakor ezek a fájlok automatikusan be lesznek
-töltve.
+Prepare the data required for the assignment. The data is located in the `migrations/` directory in the `data.zip` file. Extract its contents into the same directory. The files will be loaded automatically when the `db` container starts.
 
 ```sh
 cd migrations
 unzip data.zip
 ```
 
-Indítsd el a fejlesztéshez szükséges Docker containereket:
+Start the Docker containers required for development:
 
 ```sh
 docker compose up api-dev client-dev db
 ```
 
-Sikeres indítás után győződj meg róla, hogy lefutottak-e a külső csomagokat
-telepítő scriptek (`composer install` és `npm ci`)! A Docker folyamatnak legyen
-írási joga az `api/` és `client/` mappákhoz, mert a telepítő scriptek írás
-műveletet végeznek. Ha ezek a mappák nem írhatóak számára, nem fognak sikeresen
-lefutni. Akkor jó, ha ehhez hasonló üzeneteket találsz a konzolban (nem
-feltétlenül közvetlenül egymás után):
+After startup, verify that the scripts installing external packages (`composer install` and `npm ci`) completed successfully. The Docker process must have write access to the `api/` and `client/` directories because the installation scripts write to them. If these directories are not writable, the scripts will not complete successfully. Look for console messages similar to the following (they do not necessarily appear consecutively):
 
-```
-takehome-db          | [INFO] /docker-entrypoint-initdb.d/tx_o_Budapest_19012023.csv adatok importálása sikeres
+```text
+takehome-db          | [INFO] Successfully imported data from /docker-entrypoint-initdb.d/tx_o_Budapest_19012023.csv
 takehome-db          | 2026-03-06T13:31:41.803028Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections.
 takehome-client-dev  |   VITE v7.3.1  ready in 149 ms
 takehome-client-dev  |
@@ -77,104 +52,78 @@ takehome-client-dev  |   ➜  Local:   http://localhost:5173/
 takehome-api-dev     | 2026-03-06 13:31:45,850 INFO exited: composer-install (exit status 0; expected)
 ```
 
-Az `api-dev` container működése ellenőrizhető az alábbi paranccsal:
+The `api-dev` container can be checked with:
 
 ```sh
-$ curl localhost:8080/hello?name=vendég
-
-{"message":"Hello, vendég!"}
+curl localhost:8080/hello?name=guest
 ```
 
-A `client-dev` containeré pedig ezzel:
+Response:
+
+```json
+{"message":"Hello, guest!"}
+```
+
+The `client-dev` container can be checked with:
 
 ```sh
-$ curl localhost:5173
+curl localhost:5173
+```
 
+Response:
+
+```html
 <!doctype html>
-<html lang="hu">
+<html lang="en">
 
 <head>
-# stb.
+<!-- and so on -->
 ```
 
-Ha ezen a ponton nem találod a fentebb említett üzeneteket, az ellenőrző
-parancsokra nem ezeket a válaszokat kapod, vagy más hibát tapasztalsz, azt
-jelezd felénk! [hiring@adiumsoft.hu](mailto:hiring@adiumsoft.hu)
+If you cannot find the messages mentioned above, you receive responses other than those listed for the verification commands, or you encounter another error, report the problem to [hiring@adiumsoft.hu](mailto:hiring@adiumsoft.hu).
 
-A mintaadatokat egy MySQL adatbázisban tároljuk, amely a host gépről a `8081`
-porton érhető el. A használatához szükséges felhasználónév `root`, a jelszó
-szintén `root`. Természetesen a containeren belülről is használható:
+The sample data is stored in a MySQL database that is accessible from the host machine on port `8081`. The required username is `root`, and the password is also `root`. It can also be accessed from inside the container:
 
 ```sh
-docker compose exec db sh -c 'mysql --user=root --password=root'
+docker compose exec db sh -c 'mysql --user=root --******'
 ```
 
-A forráskódban változó-, függvény-, függvényparaméter- és mezőnevek esetén
-camelCase írásmódot használj. Osztályok, típusok, React komponenesek nevei
-legyenek PascalCase módon formázva.
+Use camelCase for variable, function, function parameter, and field names in the source code. Format class, type, and React component names using PascalCase.
 
-### Szerveroldal
+### Server Side
 
-A szerveroldalon PHP-t használj, vedd igénybe az előre elkészített
-[keretrendszer komponenseket](./api/src/Framework) a HTTP kérések kezeléséhez és az
-adatbázis-lekérdezésekhez. Készítsd el az alábbi két végpontot:
+On the server side, use PHP and the prepared [framework components](./api/src/Framework) to handle HTTP requests and database queries. Implement the following two endpoints:
 
-1. Query paraméterként város azonosítót, kezdő- és végdátumot fogad és
-   visszaadja a város időjárási adatait. 
+1. Accept a city ID, start date, and end date as query parameters and return the city's weather data.
 
-2. Query paraméterként _régiómegnevezést_ (pl. Dunántúl), kezdő- és végdátumot
-   fogad és visszaadja a megadott régió városainak _átlagolt_ időjárási adatait.
+2. Accept a region name (for example, `Transdanubia`), start date, and end date as query parameters and return the averaged weather data for the cities in the specified region.
 
-Az adatokból (kliensoldalon) olyan táblázatot kell készíteni, amelyben
-feltünteted a minimum-, maximum- és átlaghőmérsékletet, valamint a csapadék
-adatokat, valamennyi esetben mértékegységgel együtt. A táblázat láblécében fel
-kell tüntetned az egyes oszlopok medián- és módusz értékét. 
+Using this data on the client side, create a table that displays the minimum, maximum, and average temperatures and precipitation data, each with the appropriate unit. Add the median and mode values for each column to the table footer.
 
-A végpontok, query paraméterek neve és a visszaadott adatok struktúrája szabadon
-megválasztható, a cél az adatok megjelenítése. A végpontok válasza JSON
-formátumú szöveg legyen. 
+The names of the endpoints and query parameters and the structure of the returned data are open to your choice, as the goal is to display the data. Endpoint responses must use JSON text.
 
-A fent említett végpontokon kívül továbbiak és létrehozhatóak, amennyiben
-szükségesnek ítéled.
+Additional endpoints may be created if you consider them necessary.
 
-### Kliensoldal
+### Client Side
 
-Kliensoldalon a UI létrehozásához használd a React könyvtárat, a TypeScript
-nyelvet és a Vite build rendszert. Hozz létre két felületet:
+On the client side, use the React library, the TypeScript language, and the Vite build system to create the UI. Create two views:
 
-1. Egy várost, illetve egy kezdő- és végdátumot lehet rajta kiválasztani. Egy
-   gomb megnyomására letölti a város adott időszakbeli időjárás adatait és
-   táblázatos formában jeleníti meg. A táblázat oszlopai legyenek a minimum-,
-   maximum- és átlaghőmérséklet, valamint a csapadék adatok. Az értékek mellett
-   a megfelelő mértékegységet is tüntesd fel.
+1. A view where the user can select a city and a start and end date. When a button is pressed, download the weather data for the selected city and period and display it in table format. The table columns must include the minimum, maximum, and average temperatures and precipitation data. Display the appropriate unit next to each value.
 
-1. Egy _régiót_, illetve egy kezdő- és végdátumot lehet rajta kiválasztani. Egy
-   gomb megnyomására letölti a régió adott időszakbeli _átlagolt_ időjárás adatait és
-   táblázatos formában jeleníti meg. A táblázat oszlopai legyenek a minimum-,
-   maximum- és átlaghőmérséklet, valamint a csapadék adatok. Az értékek mellett
-   a megfelelő mértékegységet is tüntesd fel.
+2. A view where the user can select a region and a start and end date. When a button is pressed, download the averaged weather data for the selected region and period and display it in table format. The table columns must include the minimum, maximum, and average temperatures and precipitation data. Display the appropriate unit next to each value.
 
-Az átlaghőmérsékletet a minimum- és maximum hőmérséklet adatokból számold ki! Az
-oldalak elérési módja tetszőleges - használhatsz bármilyen routing könyvtárat
-(pl. [TanStack Router](https://tanstack.com/router/latest)), de anélkül is
-tökéletesen megfelelő. A felületek formázása szintén tetszőleges, de ne a
-böngésző által biztosított alapértelmezett kinézet legyen. Lehetőség szerint
-használd a Tailwind CSS keretrendszert a formázáshoz (de nyers CSS is jó).
+Calculate the average temperature from the minimum and maximum temperature data.
 
-### Extra feladatok
+The method for accessing the pages is flexible; you may use any routing library, such as [TanStack Router](https://tanstack.com/router/latest), or implement the pages without routing. Styling is also flexible, but the result must not use the browser's default appearance. Prefer the Tailwind CSS framework for styling, though plain CSS is also acceptable.
 
-Ezek a feladatok nem kötelezőek, de rajtuk keresztül be tudod mutatni az egyes
-technológiák mélyebb ismeretét.
+### Extra Tasks
 
-1. A felhasználói felületen lehessen váltani SI és angolszász mértékegységek
-   (Celsius helyett Fahrenheit, mm helyett inch) között!
+These tasks are optional, but they provide an opportunity to demonstrate deeper knowledge of the technologies.
 
-1. Írj automata teszteket a szerveroldali működéshez PHPUnit segítségével!
+1. Allow users to switch between SI and imperial units in the interface (Celsius and Fahrenheit, millimeters and inches).
 
-1. Vizsgáld meg az adatbázis felépítését és tartalmát. Fogalmazz meg
-   javaslatokat a hibásnak, javítandónak vélt részekkel kapcsolatban és írd le
-   őket a `db-suggestions.md` fájlba.
+2. Write automated server-side tests using PHPUnit.
 
-1. Használd a PHP forráskód formázó és statikus elemző parancsokat (`composer
-   format`, `composer analyse`). Javítsd ki az esetleges statikus elemző által
-   jelzett hibákat!
+3. Examine the database structure and contents. Formulate suggestions for parts that appear incorrect or could be improved, and record them in `db-suggestions.md`.
+
+4. Use the PHP source formatter and static analysis commands (`composer format`, `composer analyse`). Fix any errors reported by the static analyzer.
